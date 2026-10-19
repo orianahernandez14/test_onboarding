@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* tus custom */
+body {
+  font-family: 'Archivo', sans-serif;
+  background-color: #FCFCFC;
+  color: #153244;
+}
+
+h1, h2, h3, .font-heading {
+  font-family: 'Archivo', sans-serif;
+  color: #153244;
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #8DE2D6; border-radius: 10px; }

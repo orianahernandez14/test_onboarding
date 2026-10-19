@@ -1,0 +1,693 @@
+openapi: 3.0.3
+info:
+  title: Navegador Onboarding - GCBA API
+  description: API REST para la gestión integral del onboarding técnico y cultural del GCBA.
+  version: 1.0.0
+
+servers:
+  - url: /
+    description: Servidor API v1
+
+paths:
+  /api/v1/me:
+    get:
+      summary: Obtener contexto del usuario actual
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeContext"
+
+  /api/v1/profiles:
+    get:
+      summary: Listar perfiles de onboarding
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OnboardingProfile"
+
+    post:
+      summary: Crear un perfil de ingresante
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingProfileCreate"
+      responses:
+        "201":
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/profiles/{id}:
+    get:
+      summary: Obtener detalle de un perfil
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingProfile"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      summary: Reemplazar un perfil completo (admin/import)
+      description: >
+        Reemplaza el perfil completo (info, tareas, documentos). Útil para import/export,
+        o para operaciones administrativas. Para cambios parciales de info usar PATCH /profiles/{id}/info
+        y para tareas usar los endpoints /profiles/{id}/tasks.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingProfile"
+      responses:
+        "200":
+          description: Actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/profiles/{id}/info:
+    patch:
+      summary: Actualiza campos de información del perfil (patch parcial).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingInfoPatch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingInfo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/profiles/{id}/tasks:
+    post:
+      summary: Crear una tarea en el plan del ingresante
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreate"
+      responses:
+        "201":
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/profiles/{id}/tasks/{taskId}:
+    patch:
+      summary: Actualizar una tarea
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskPatch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      summary: Eliminar una tarea del plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: taskId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Sin contenido
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/knowledge-items:
+    get:
+      summary: Consultar repositorio de conocimiento
+      parameters:
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: teamName
+          in: query
+          schema: { type: string }
+        - name: isGlobal
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeItem"
+
+    post:
+      summary: Crear recurso en el repositorio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeItemCreate"
+      responses:
+        "201":
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/knowledge-items/{id}:
+    delete:
+      summary: Eliminar recurso del repositorio
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Sin contenido
+        "404":
+          $ref: "#/components/responses/NotFound"
+    
+    patch:
+      summary: Actualizar recurso del repositorio
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeItemPatch"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  responses:
+    BadRequest:
+      description: Solicitud mal formada o datos inválidos.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: El recurso solicitado no existe.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+
+    MeContext:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        view:
+          type: string
+          enum: [leader, newHire, admin]
+        jurisdiction: { type: string }
+        teamName: { type: string }
+        profileId:
+          type: string
+          nullable: true
+
+    Attachment:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string }
+
+    Referent:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        email:
+          type: string
+          format: email
+          nullable: true
+
+    Subtask:
+      type: object
+      required: [id, title, completed]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        completed: { type: boolean }
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    TaskType:
+      type: string
+      enum: [MEETING, SETUP, READING, OPERATIONAL]
+
+    Task:
+      type: object
+      required: [id, title, day, week, type, referent, completed]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        day:
+          type: integer
+          minimum: 1
+        week:
+          type: integer
+          minimum: 1
+        type:
+          $ref: "#/components/schemas/TaskType"
+        resource:
+          type: string
+          nullable: true
+        referent:
+          $ref: "#/components/schemas/Referent"
+        completed: { type: boolean }
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+        subtasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Subtask"
+
+        # 👇 alineado con tu front actual (institucional clonada)
+        isGlobal:
+          type: boolean
+          nullable: true
+        globalTaskId:
+          type: string
+          nullable: true
+
+        # 👇 alineado con tu front (link a recursos)
+        linkedKnowledgeItemIds:
+          type: array
+          items: { type: string }
+          nullable: true
+
+    TaskCreate:
+      type: object
+      required: [title, day, week, type, referent]
+      properties:
+        title: { type: string }
+        day:
+          type: integer
+          minimum: 1
+        week:
+          type: integer
+          minimum: 1
+        type:
+          $ref: "#/components/schemas/TaskType"
+        resource:
+          type: string
+          nullable: true
+        referent:
+          $ref: "#/components/schemas/Referent"
+        subtasks:
+          type: array
+          items:
+            type: object
+            required: [title]
+            properties:
+              title: { type: string }
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+        linkedKnowledgeItemIds:
+          type: array
+          items: { type: string }
+          nullable: true
+        isGlobal:
+          type: boolean
+          nullable: true
+        globalTaskId:
+          type: string
+          nullable: true
+
+    TaskPatch:
+      type: object
+      properties:
+        title: { type: string }
+        day:
+          type: integer
+          minimum: 1
+        week:
+          type: integer
+          minimum: 1
+        type:
+          $ref: "#/components/schemas/TaskType"
+        resource:
+          type: string
+          nullable: true
+        referent:
+          $ref: "#/components/schemas/Referent"
+        completed: { type: boolean }
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        subtasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Subtask"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+        linkedKnowledgeItemIds:
+          type: array
+          items: { type: string }
+          nullable: true
+        isGlobal:
+          type: boolean
+          nullable: true
+        globalTaskId:
+          type: string
+          nullable: true
+
+    AdminDocument:
+      type: object
+      required: [id, title, status, required]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        status:
+          type: string
+          enum: [pending, uploaded, verified]
+        required: { type: boolean }
+        uploadedAt:
+          type: string
+          format: date-time
+          nullable: true
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        fileName:
+          type: string
+          nullable: true
+        fileUrl:
+          type: string
+          nullable: true
+
+    OnboardingInfo:
+      type: object
+      required:
+        - newHireName
+        - jobTitle
+        - teamName
+        - manager
+        - onboardingStartDate
+      properties:
+        newHireName: { type: string }
+        jobTitle: { type: string }
+        jobSummary: { type: string }
+        teamName: { type: string }
+        teamFunctions: { type: string }
+        teamMembers:
+          type: string
+          maxLength: 1000
+
+        manager: { type: string }
+        managerPosition:
+          type: string
+          nullable: true
+
+        teamLead: { type: string }
+        teamLeadPosition:
+          type: string
+          nullable: true
+
+        jurisdiction: { type: string }
+
+        onboardingStartDate:
+          type: string
+          format: date
+
+        documentationDeadline:
+          type: string
+          format: date
+          nullable: true
+
+        deskNumber:
+          type: string
+          nullable: true
+        workEquipment:
+          type: string
+          nullable: true
+        workAddress:
+          type: string
+          nullable: true
+        remoteWorkDay:
+          type: string
+          nullable: true
+
+    OnboardingInfoPatch:
+      type: object
+      properties:
+        newHireName: { type: string }
+        jobTitle: { type: string }
+        jobSummary: { type: string }
+        teamName: { type: string }
+        teamFunctions: { type: string }
+        teamMembers: 
+          type: string 
+          maxLength: 1000
+        manager: { type: string }
+        managerPosition: { type: string }
+        teamLead: { type: string }
+        teamLeadPosition: { type: string }
+        jurisdiction: { type: string }
+        onboardingStartDate:
+          type: string
+          format: date
+        documentationDeadline:
+          type: string
+          format: date
+        deskNumber: { type: string }
+        workEquipment: { type: string }
+        workAddress: { type: string }
+        remoteWorkDay: { type: string }
+
+    OnboardingProfile:
+      type: object
+      required: [id, info, tasks, documents]
+      properties:
+        id: { type: string }
+        info:
+          $ref: "#/components/schemas/OnboardingInfo"
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminDocument"
+
+    OnboardingProfileCreate:
+      type: object
+      required: [info]
+      properties:
+        id:
+          type: string
+          nullable: true
+        info:
+          $ref: "#/components/schemas/OnboardingInfo"
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+          nullable: true
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminDocument"
+          nullable: true
+
+    KnowledgeCategory:
+      type: string
+      enum: [INSTITUTIONAL, TEAM, TOOLS, ROLE_GUIDE, MILESTONES, SUPPORT]
+
+    KnowledgeItem:
+      type: object
+      required: [id, title, description, category, isGlobal]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        url:
+          type: string
+          nullable: true
+        attachment:
+          allOf:
+            - $ref: "#/components/schemas/Attachment"
+          nullable: true
+        category:
+          $ref: "#/components/schemas/KnowledgeCategory"
+        visibleOnDay:
+          type: integer
+          nullable: true
+        isGlobal: { type: boolean }
+        profileId:
+          type: string
+          nullable: true
+        teamName:
+          type: string
+          nullable: true
+
+    KnowledgeItemCreate:
+      type: object
+      required: [title, description, category, isGlobal]
+      properties:
+        # id opcional porque tu front lo genera (ki-...)
+        id:
+          type: string
+          nullable: true
+        title: { type: string }
+        description: { type: string }
+        url:
+          type: string
+          nullable: true
+        attachment:
+          allOf:
+            - $ref: "#/components/schemas/Attachment"
+          nullable: true
+        category:
+          $ref: "#/components/schemas/KnowledgeCategory"
+        visibleOnDay:
+          type: integer
+          nullable: true
+        isGlobal: { type: boolean }
+        teamName:
+          type: string
+          nullable: true
+        profileId:
+          type: string
+          nullable: true
+    
+    KnowledgeItemPatch:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        url: { type: string, nullable: true }
+        attachment:
+          allOf:
+            - $ref: "#/components/schemas/Attachment"
+          nullable: true
+        category:
+          $ref: "#/components/schemas/KnowledgeCategory"
+        visibleOnDay: { type: integer, nullable: true }
+        isGlobal: { type: boolean }
+        profileId: { type: string, nullable: true }
+        teamName: { type: string, nullable: true }
